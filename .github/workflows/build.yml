@@ -48,28 +48,23 @@ jobs:
     - name: Install Buildozer and Compatible Cython
       run: |
         pip install --upgrade pip setuptools
-        pip install Cython==0.29.33
+        pip install "Cython<3.0.0"
         pip install buildozer
 
-    - name: Accept Android Licenses & Download Build-Tools
+    - name: Accept Android Licenses
       run: |
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.0" "platforms;android-33" "platform-tools" || true
 
-    - name: Fix Permissions and Buildozer Spec
+    - name: Clean & Build APK with Buildozer
       run: |
-        # Asegurar permisos de ejecución en el directorio
-        chmod -R +x .
+        # Configurar licencias en buildozer.spec automáticamente
+        sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec || true
         
-        # Ajustar especificaciones obligatorias en buildozer.spec para evitar fallos de compilación
-        if [ -f buildozer.spec ]; then
-          sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
-          sed -i 's/android.api = .*/android.api = 33/' buildozer.spec
-          sed -i 's/android.minapi = .*/android.minapi = 21/' buildozer.spec
-        fi
-
-    - name: Build APK with Buildozer
-      run: |
+        # Limpiar residuos anteriores
+        buildozer android clean || true
+        
+        # Generar APK en modo debug
         buildozer -v android debug
 
     - name: Upload APK Artifact
@@ -77,3 +72,4 @@ jobs:
       with:
         name: app-release
         path: bin/*.apk
+        
