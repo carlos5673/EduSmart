@@ -29,7 +29,7 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Install Essential System Tools
+    - name: Install System Dependencies
       run: |
         sudo apt-get update || true
         sudo apt-get install -y --no-install-recommends \
@@ -39,22 +39,37 @@ jobs:
           unzip \
           libffi-dev \
           libssl-dev \
-          python3-dev
+          python3-dev \
+          autoconf \
+          libtool \
+          pkg-config \
+          cmake
 
-    - name: Install Buildozer and Cython
+    - name: Install Buildozer and Compatible Cython
       run: |
         pip install --upgrade pip setuptools
-        pip install "Cython<3.0.0"
+        pip install Cython==0.29.33
         pip install buildozer
 
-    - name: Accept Android Licenses & Install Build-Tools (AIDL)
+    - name: Accept Android Licenses & Download Build-Tools
       run: |
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.0" "platforms;android-33" "platform-tools" || true
 
+    - name: Fix Permissions and Buildozer Spec
+      run: |
+        # Asegurar permisos de ejecución en el directorio
+        chmod -R +x .
+        
+        # Ajustar especificaciones obligatorias en buildozer.spec para evitar fallos de compilación
+        if [ -f buildozer.spec ]; then
+          sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
+          sed -i 's/android.api = .*/android.api = 33/' buildozer.spec
+          sed -i 's/android.minapi = .*/android.minapi = 21/' buildozer.spec
+        fi
+
     - name: Build APK with Buildozer
       run: |
-        sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec || true
         buildozer -v android debug
 
     - name: Upload APK Artifact
