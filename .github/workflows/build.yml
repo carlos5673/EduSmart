@@ -45,11 +45,11 @@ jobs:
           pkg-config \
           cmake
 
-    - name: Install Buildozer and Compatible Cython
+    - name: Install Buildozer, Cython and Kivy Tools
       run: |
         pip install --upgrade pip setuptools
         pip install "Cython<3.0.0"
-        pip install buildozer
+        pip install buildozer kivymd requests pillow
 
     - name: Accept Android Licenses
       run: |
@@ -58,13 +58,11 @@ jobs:
 
     - name: Clean & Build APK with Buildozer
       run: |
-        # Configurar licencias en buildozer.spec automáticamente
+        # Forzar aceptación de licencias en buildozer.spec
         sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec || true
         
-        # Limpiar residuos anteriores
+        # Iniciar compilación limpia
         buildozer android clean || true
-        
-        # Generar APK en modo debug
         buildozer -v android debug
 
     - name: Upload APK Artifact
@@ -72,4 +70,3 @@ jobs:
       with:
         name: app-release
         path: bin/*.apk
-        
