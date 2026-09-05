@@ -13,35 +13,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install system dependencies
+      - name: Create buildozer.spec
         run: |
-          sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libreadline-dev sqlite3 libsqlite3-dev libssl-dev libffi-dev libgdbm-dev build-essential libltdl-dev ccache clang gfortran
-
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          pip install "cython<3.0.0" buildozer
-
-      - name: Generate buildozer.spec and Build APK
-        run: |
-          # Generar archivo buildozer.spec
-          buildozer init
+          cat << 'EOF' > buildozer.spec
+          [app]
+          title = MiApp
+          package.name = miapp
+          package.domain = org.miempresa
+          source.dir = .
+          source.include_exts = py,png,jpg,kv,atlas
+          version = 0.1
+          requirements = python3,kivy,kivymd
+          orientation = portrait
+          osx.kivy_version = 2.2.1
+          fullscreen = 0
+          android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+          android.api = 33
+          android.minapi = 21
+          android.ndk = 25b
+          android.accept_sdk_license = True
           
-          # Ajustar configuraciones necesarias
-          sed -i 's/title = My Application/title = MiApp/g' buildozer.spec
-          sed -i 's/package.name = myapp/package.name = miapp/g' buildozer.spec
-          sed -i 's/package.domain = org.test/package.domain = org.miempresa/g' buildozer.spec
-          sed -i 's/requirements = python3,kivy/requirements = python3,kivy,kivymd/g' buildozer.spec
-          sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
+          [buildozer]
+          log_level = 2
+          warn_on_root = 1
+          EOF
 
-          # Compilar el APK
-          buildozer -v android debug
+      - name: Build with Buildozer Action
+        uses: ArtemShedov/buildozer-action@v1.2.0
+        with:
+          command: buildozer -v android debug
+          buildozer_version: master
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
