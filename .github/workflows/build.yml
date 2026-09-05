@@ -21,7 +21,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libreadline-dev sqlite3 libsqlite3-dev libssl-dev libffi-dev libgdbm-dev build-essential libltdl-dev ccache clad gfortran
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libreadline-dev sqlite3 libsqlite3-dev libssl-dev libffi-dev libgdbm-dev build-essential libltdl-dev ccache clang gfortran
 
       - name: Install Python dependencies
         run: |
@@ -39,7 +39,6 @@ jobs:
           sed -i 's/package.domain = org.test/package.domain = org.miempresa/g' buildozer.spec
           sed -i 's/requirements = python3,kivy/requirements = python3,kivy,kivymd/g' buildozer.spec
           sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
-          sed -i 's/# p4a.branch = master/p4a.branch = master/g' buildozer.spec
 
           # Compilar el APK
           buildozer -v android debug
